@@ -225,34 +225,52 @@ function MarkerService.AddSurfaceOutline(Target: Instance, Configs: MarkerConfig
 	return ThinPart, SurfaceGui
 end
 
-function MarkerService.AddLine(From: Vector3, To: Vector3, Color: Color3, Transparency: number, Thickness: number, Parent: Instance): Part
-	local Line = Instance.new("Part")
-	Line.Name = "MarkerLine"
-	Line.Anchored = true
-	Line.CanCollide = false
-	Line.CanQuery = false
-	Line.CastShadow = false
-	Line.Material = Enum.Material.Neon
-	Line.Color = Color
-	Line.Transparency = Transparency
+function MarkerService.AddLine(From: Vector3, To: Vector3, Color: Color3, Transparency: number, Thickness: number, Parent: Instance): Beam
+	local Beam = Instance.new("Beam")
+	Beam.Name = "MarkerLine"
 
-	MarkerService.UpdateLine(Line, From, To, Thickness)
+	Beam.Texture = ""
+	Beam.TextureSpeed = 0
+	Beam.LightInfluence = 0
+	Beam.FaceCamera = true
+	Beam.Segments = 2
+	Beam.ZOffset = 0
 
-	Line.Parent = Parent
-	return Line
+	Beam.Width0 = Thickness
+	Beam.Width1 = Thickness
+	Beam.Color = ColorSequence.new(Color)
+	Beam.Transparency = NumberSequence.new(Transparency)
+
+	local Attachment0 = Instance.new("Attachment")
+	Attachment0.Name = "A0"
+	Attachment0.Parent = Beam
+
+	local Attachment1 = Instance.new("Attachment")
+	Attachment1.Name = "A1"
+	Attachment1.Parent = Beam
+
+	Beam.Attachment0 = Attachment0
+	Beam.Attachment1 = Attachment1
+
+	MarkerService.UpdateLine(Beam, From, To, Thickness)
+
+	Beam.Parent = Parent
+	return Beam
 end
 
-function MarkerService.UpdateLine(Line: Part, From: Vector3, To: Vector3, Thickness: number?)
-	local Direction = To - From
-	local Distance = Direction.Magnitude
-	if Distance < 0.001 then
-		Line.Size = Vector3.zero
-		return
+function MarkerService.UpdateLine(Line: Beam, From: Vector3, To: Vector3, Thickness: number?)
+	local A0 = Line:FindFirstChild("A0") :: Attachment
+	local A1 = Line:FindFirstChild("A1") :: Attachment
+
+	if A0 and A1 then
+		A0.WorldPosition = From
+		A1.WorldPosition = To
 	end
 
-	local CurrentThickness = math.max(0.005, Thickness or Line.Size.X)
-	Line.Size = Vector3.new(CurrentThickness, CurrentThickness, Distance)
-	Line.CFrame = CFrame.lookAt((From + To) * 0.5, To)
+	if Thickness then
+		Line.Width0 = Thickness
+		Line.Width1 = Thickness
+	end
 end
 
 return MarkerService
